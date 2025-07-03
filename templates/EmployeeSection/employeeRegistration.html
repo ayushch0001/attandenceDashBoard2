@@ -1,0 +1,107 @@
+
+{% extends "BaseSection/base.html" %}
+
+{% block title %}Employee Registration Form{% endblock %}
+
+
+{% block content %}
+
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+  <div class="form-row">
+    <div class="col-md-4 mb-3">
+      <input type="text" class="form-control" id="validationDefault01" placeholder="Name" name="name"  required>
+    </div>
+
+
+    <div class="col-md-4 mb-3">
+        <select class="form-control" name="deprt" id="departId">
+                <option value= "0">Select Deparment</option>
+                {% for depart in departments %}
+                <option value= "{{ depart.id }}">{{ depart.deprtment }}</option>
+                {% endfor %}
+        </select>
+    </div>
+
+
+    <div class="col-md-4 mb-3">
+      <input type="number" class="form-control" id="validationDefault02" name="empId" placeholder="EmployeeId" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <input type="file" class="form-control" id="validationDefault02" name="img" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <input type="text" class="form-control" id="validationDefault02" name="sonOf" placeholder="S/O" required>
+    </div>
+    <div class="col-md-4 mb-3">
+        <input type="number" class="form-control" id="validationDefault02" oninput="enforceLength(this, 10)"  name="mobile1" placeholder="Mobile 1" required>
+    </div>
+    <div class="col-md-4 mb-3">
+    <input type="number" class="form-control" id="validationDefault02" oninput="enforceLength(this, 10)" placeholder="Mobile 2" name="mobile2" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <input type="text" class="form-control" id="validationDefault02" placeholder="Adhar Card" name="adharcard" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <input type="text" class="form-control" id="validationDefault02" placeholder="Refrence Of"   name="refrerName" required>
+    </div>
+        <div class="col-md-4 mb-3">
+      <input type="number" class="form-control" id="validationDefault02" placeholder="Refrence Of Mobile" name="referMob" required>
+    </div>
+  </div>
+<p>Parmanent Address</p>
+  <div class="form-row">
+    <div class="col-md-6 mb-3">
+      <input type="text" class="form-control" id="validationDefault03" placeholder="address" name="pAddress" required>
+    </div>
+    <div class="col-md-3 mb-3">
+      <input type="text" class="form-control" id="validationDefault04" placeholder="City" name="pcity" required>
+    </div>
+    <div class="col-md-3 mb-3">
+      <input type="text" class="form-control" id="validationDefault05" placeholder="State" name="pState" required>
+    </div>
+ </div>
+<p>Current Address</p>
+  <div class="form-row">
+    <div class="col-md-6 mb-3">
+      <input type="text" class="form-control" id="validationDefault03" placeholder="address" name="cAddress" required>
+    </div>
+    <div class="col-md-3 mb-3">
+      <input type="text" class="form-control" id="validationDefault04" placeholder="City" name="ccity" required>
+    </div>
+    <div class="col-md-3 mb-3">
+      <input type="text" class="form-control" id="validationDefault05" placeholder="State" name="cState" required>
+    </div>
+  </div>
+  <p>Old Employer Name </p>
+  <div class="form-row">
+    <div class="col-md-4 mb-3">
+      <input type="text" class="form-control" id="validationDefault01" placeholder="Name" name="oEmployerName" required>
+    </div>
+    <div class="col-md-4 mb-3">
+      <input type="number" class="form-control" id="validationDefault02" oninput="enforceLength(this, 10)"placeholder="Mob :" name="oEmpMob" required>
+    </div>
+</div>
+
+  <button class="btn btn-primary" type="submit">Submit form</button>
+</form>
+
+
+
+<script>
+function enforceLength(element, maxLength) {
+    const value = element.value;
+
+    // Remove any non-digit characters
+    const numericValue = value.replace(/\D/g, '');
+
+    // Limit length
+    if (numericValue.length > maxLength) {
+        element.value = numericValue.slice(0, maxLength);
+    } else {
+        element.value = numericValue;
+    }
+}
+</script>
+{% endblock %}

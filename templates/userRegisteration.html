@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(45deg, #ffffff, #b3d4fc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .navbar {
+            background: linear-gradient(45deg, #080808, #070707);
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-size: 1.2rem;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffd700 !important;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            max-width: 750px;
+            width: 100%;
+            margin-top: 80px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 1.2rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Attendance</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon text-white">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'success_page' %}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance_list' %}">Attendance List</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'registerFaces' %}">Register Face</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance' %}">Attendance</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="register-container">
+        <h2 class="text-center">Register Admin</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" class="form-control" id="id_username" name="username" required>
+                <p>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+            </div>
+            <div class="form-group">
+                <label for="id_first_name">First Name</label>
+                <input type="text" class="form-control" id="id_first_name" name="first_name" required>
+            </div>
+            <div class="form-group">
+                <label for="id_last_name">Last Name</label>
+                <input type="text" class="form-control" id="id_last_name" name="last_name" required>
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Password</label>
+                <input type="password" class="form-control" id="id_password1" name="password1" required>
+                <ul>
+                    <li>Your password can’t be too similar to your other personal information.</li>
+                    <li>Your password must contain at least 8 characters.</li>
+                    <li>Your password can’t be a commonly used password.</li>
+                    <li>Your password can’t be entirely numeric.</li>
+                </ul>
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Confirm Password</label>
+                <input type="password" class="form-control" id="id_password2" name="password2" required>
+            </div>
+           
+            <button type="submit">Register</button>
+        </form>
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

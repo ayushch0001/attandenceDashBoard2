@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Attendance System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .navbar {
+            background: linear-gradient(45deg, #000000, #000000);
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-size: 1.2rem;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffd700 !important;
+        }
+
+        #video-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 4 / 3;
+        }
+
+        #video, #canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid black;
+            right: -120px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-container button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Adjustments for medium screens (tablets) */
+        @media (max-width: 1024px) {
+            #video, #canvas {
+                right: -33px;
+            }
+        }
+
+        /* Adjustments for small screens (mobile) */
+        @media (max-width: 768px) {
+            #video, #canvas {
+                right: -3px;
+            }
+        }
+
+        /* Adjustments for extra small screens (very small mobiles) */
+        @media (max-width: 480px) {
+            #video, #canvas {
+                right: 0px; /* Align properly */
+            }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            .btn-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Attendance</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon text-white">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'success_page' %}">Home</a></li>
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance_list' %}">Attendance List</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'registerFaces' %}">RegisterFace</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance' %}">Attendance</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="video-container">
+                            <video id="video" style="transform: scaleX(-1);" autoplay playsinline></video>
+                            <canvas id="canvas"></canvas>
+                        </div>
+                            
+                        <form method="post" enctype="multipart/form-data" id="attendance-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="clickedImg" id="clickedImg">
+                            <input type="hidden" name="actionType" id="actionType">
+                            <li>EmpId <input type="text" name="empId"></li>
+                            <p id="wait-message" style="display: none; color: red;">Processing...</p>
+                            <p id="liveness-message" style="display: none; color: blue;">Please blink to confirm liveness.</p>
+
+                            <div class="btn-container">
+                                <button type="button" onclick="capturePhoto('signin')" class="btn btn-success" disabled id="signin-btn">Sign In</button>
+                                <button type="button" onclick="capturePhoto('signout')" class="btn btn-danger" disabled id="signout-btn">Sign Out</button>
+                            </div>
+                        </form>
+
+                        <div id="response"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="names-section"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Face Attendance System. All rights reserved.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js/dist/face-api.min.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const clickedImgInput = document.getElementById('clickedImg');
+        const actionTypeInput = document.getElementById('actionType');
+        const attendanceForm = document.getElementById('attendance-form');
+        const waitMessage = document.getElementById('wait-message');
+        const livenessMessage = document.getElementById('liveness-message');
+        const signinBtn = document.getElementById("signin-btn");
+        const signoutBtn = document.getElementById("signout-btn");
+        let faceDetected = false;
+        let blinkCount = 0;
+        let isLive = false;
+
+        async function loadModels() {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri('/oas/media/models/'),
+                faceapi.nets.faceLandmark68Net.loadFromUri('/oas/media/models/'),
+                faceapi.nets.faceRecognitionNet.loadFromUri('/oas/media/models/'),
+                faceapi.nets.faceExpressionNet.loadFromUri('/oas/media/models/')
+            ]);
+            console.log("Face detection models loaded!");
+        }
+
+        async function startVideo() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    adjustCanvasSize();
+                    detectFaces();
+                };
+                console.log("Camera access granted!");
+            } catch (err) {
+                console.error("Camera access error:", err);
+                alert("Failed to access the camera. Please allow camera permissions and refresh the page.");
+            }
+        }
+
+        function adjustCanvasSize() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        }
+
+        function detectFaces() {
+            adjustCanvasSize();
+
+            setInterval(async () => {
+                if (video.videoWidth === 0 || video.videoHeight === 0) {
+                    console.warn("Video not ready yet...");
+                    return;
+                }
+
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                    .withFaceLandmarks()
+                    .withFaceExpressions();
+
+                const displaySize = { width: video.videoWidth, height: video.videoHeight };
+                faceapi.matchDimensions(canvas, displaySize);
+
+                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Apply horizontal mirror to the canvas
+                ctx.save();
+                ctx.scale(-1, 1); // Flip horizontally
+                ctx.translate(-canvas.width, 0); // Adjust the position after scaling
+
+                faceapi.draw.drawDetections(canvas, resizedDetections);
+                faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+
+                // Check for blinking
+                if (detections.length > 0) {
+                    const landmarks = detections[0].landmarks;
+                    const leftEye = landmarks.getLeftEye();
+                    const rightEye = landmarks.getRightEye();
+
+                    const leftEyeAspectRatio = getEyeAspectRatio(leftEye);
+                    const rightEyeAspectRatio = getEyeAspectRatio(rightEye);
+
+                    const eyeAspectRatio = (leftEyeAspectRatio + rightEyeAspectRatio) / 2;
+
+                    if (eyeAspectRatio < 0.25) { // Threshold for blink detection
+                        blinkCount++;
+                        if (blinkCount >= 2) { // Require at least 2 blinks to confirm liveness
+                            isLive = true;
+                            livenessMessage.style.display = 'none';
+                        }
+                    }
+                }
+
+                if (detections.length > 0 && isLive) {
+                    faceDetected = true;
+                    signinBtn.removeAttribute("disabled");
+                    signoutBtn.removeAttribute("disabled");
+                } else {
+                    faceDetected = false;
+                    signinBtn.setAttribute("disabled", true);
+                    signoutBtn.setAttribute("disabled", true);
+                }
+
+                if (detections.length > 0 && !isLive) {
+                    livenessMessage.style.display = 'block';
+                } else {
+                    livenessMessage.style.display = 'none';
+                }
+            }, 100);
+        }
+
+        function getEyeAspectRatio(eye) {
+            // Calculate the eye aspect ratio (EAR)
+            const A = distance(eye[1], eye[5]);
+            const B = distance(eye[2], eye[4]);
+            const C = distance(eye[0], eye[3]);
+            return (A + B) / (2 * C);
+        }
+
+        function distance(point1, point2) {
+            return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
+        }
+
+        function capturePhoto(action) {
+            if (!faceDetected || !isLive) {
+                alert("No live face detected! Please ensure you are in front of the camera.");
+                return;
+            }
+
+            let captureCanvas = document.createElement('canvas');
+            let captureCtx = captureCanvas.getContext('2d');
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+
+            let imageDataUrl = captureCanvas.toDataURL('image/png');
+            clickedImgInput.value = imageDataUrl;
+            actionTypeInput.value = action;
+
+            // Reset liveness check
+            blinkCount = 0;
+            isLive = false;
+
+            submitForm();
+        }
+
+        function submitForm() {
+            let formData = new FormData(attendanceForm);
+            waitMessage.style.display = 'block';
+
+            fetch(attendanceForm.action, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('names-section').innerHTML = data.namesList
+                        ? `<h6>Detected Names:</h6><ul>${data.namesList.map(name => `<li>${name}</li>`).join('')}</ul>`
+                        : '<p>No names detected.</p>';
+
+                    waitMessage.style.display = 'none';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        async function initialize() {
+            await loadModels();
+            await startVideo();
+        }
+
+        initialize();
+    </script>
+</body>
+</html>

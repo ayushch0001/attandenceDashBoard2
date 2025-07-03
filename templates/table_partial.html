@@ -1,0 +1,9 @@
+<table border="3" style="width: 100%;">
+    {% for days in months %}
+    <tr>
+        {% for day in days %}
+            <td>{{ day }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
