@@ -219,12 +219,40 @@
     }
 
     async function getAddress(lat, lon) {
+<<<<<<< HEAD
       const apiKey = "4611008aa9f1d84aff37600fd7ba681f";
       const url = `https://apis.mapmyindia.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lon}`;
       const res = await fetch(url);
       const data = await res.json();
       return data.results[0]?.formatted_address || "Unknown location";
     }
+=======
+  const apiKeys = [
+    "4611008aa9f1d84aff37600fd7ba681f",
+    "9c82d1a53a3c60dc1ef7762fd58d4038",
+    "6e361438746645b6612d080553fec1b0" // You can add the 3rd API key here
+  ];
+
+  for (const apiKey of apiKeys) {
+    if (!apiKey) continue; // skip if empty
+
+    const url = `https://apis.mapmyindia.com/advancedmaps/v1/${apiKey}/rev_geocode?lat=${lat}&lng=${lon}`;
+    try {
+      const res = await fetch(url);
+
+      if (res.status === 200) {
+        const data = await res.json();
+        return data.results?.[0]?.formatted_address || "Unknown location";
+      }
+    } catch (error) {
+      console.warn(`API key failed: ${apiKey}`, error);
+    }
+  }
+
+  return "Unknown location";
+}
+
+>>>>>>> local
 
     async function submitForm() {
       waitMessage.style.display = "block";
