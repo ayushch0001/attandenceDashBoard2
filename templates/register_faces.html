@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <!-- Bootstrap CSS for styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <style>
+        body{
+            background: linear-gradient(45deg, #ffffffbe, #9cbbff);
+        }
+        .container{     
+        border: 2px solid rgba(255, 255, 255, 0.78);
+        border-radius: 5px;
+        border-radius: 10px;
+        background: linear-gradient(45deg, #ffffff, #9cbbff);
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(15px);
+        }
+        label{
+            color: #7f0072; 
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+
+        .navbar {
+            background: linear-gradient(45deg, #020202, #000000);
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-size: 1.2rem;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffd700 !important;
+        }
+        video {
+    width: min(80vw, 25em); /* Responsive width: 90% of viewport width, max 25em */
+    height: auto; /* Maintain aspect ratio */
+    transform: scaleX(-1);
+    max-height: 25em; /* Limit max height */
+}
+    </style>
+</head>
+
+<body>
+    <!-- 🌟 Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Attendance</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon text-white">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'success_page' %}">Home</a></li>
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance_list' %}">Attandance List</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'attendance' %}">Attendence</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+
+        <!-- Instructions -->
+        <div class="alert alert-info text-center">
+            <strong>Instructions:</strong>  
+            1️⃣ Enter your <b>Full Name and Department</b> below. <br>
+            2️⃣ Click "Capture Photo" <b>3 times</b> to take pictures OR upload images manually. <br>
+            3️⃣ The <b>Submit button</b> will activate once all 3 images are selected.
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card" style="width: 100%;">
+                    <div class="card-body">
+                       <form method="post" enctype="multipart/form-data" id="signup-form" action="{% url 'registerFaces' %}" >
+                            {% csrf_token %}
+                            <select class="form-control"  id="departId" onchange="bringNames()">
+                            <option value= "0">All</option>
+                            {% for depart in departments %}
+                            <option value= "{{ depart.id }}">{{ depart.deprtment }}</option>
+                            {% endfor %}
+                            </select>
+                       </form> 
+
+
+                        <form method="post" enctype="multipart/form-data" id="signup-form" action="{% url 'registerFaces' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                               
+                                <label>Full Name</label>
+                                <select class="form-control" name="empId">
+                                    {% for employee in employees %}
+                                <option value= "{{ employee.empId }}">{{ employee.name }}</option>
+                                    {% endfor %}
+                                </select>
+                               
+                            </div>
+
+
+                            <input type="hidden" name="face1" id="face1">
+                            <input type="hidden" name="face2" id="face2">
+                            <input type="hidden" name="face3" id="face3">
+
+                            <!-- 📷 Webcam Capture Section -->
+                            <div class="form-group text-center">
+                                <label class="font-weight-bold">Capture or Upload Profile Photos</label>
+                                <div id="video-container">
+                                    <video id="video"  autoplay></video>
+                                </div>
+                                <button type="button" class="btn btn-primary my-2" id="capture-btn">📸 Capture Photo</button>
+                            </div>
+
+                            <!-- 📸 Captured Image Previews & Upload Options -->
+                            <div class="form-group">
+                                <label class="font-weight-bold">Captured or Uploaded Photos</label>
+                                <div class="row text-center">
+                                    <!-- Image 1 -->
+                                    <div class="col-md-4">
+                                        <label>Photo 1</label>
+                                        <input type="file" name="photo1" class="form-control-file upload-input" accept="image/*">
+                                        <img id="preview-1" class="img-thumbnail mt-2" style="display: none; max-width: 100px;">
+                                    </div>
+                                    <!-- Image 2 -->
+                                    <div class="col-md-4">
+                                        <label>Photo 2</label>
+                                        <input type="file" name="photo2" class="form-control-file upload-input" accept="image/*">
+                                        <img id="preview-2" class="img-thumbnail mt-2" style="display: none; max-width: 100px;">
+                                    </div>
+                                    <!-- Image 3 -->
+                                    <div class="col-md-4">
+                                        <label>Photo 3</label>
+                                        <input type="file" name="photo3" class="form-control-file upload-input" accept="image/*">
+                                        <img id="preview-3" class="img-thumbnail mt-2" style="display: none; max-width: 100px;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success mt-3 btn-block" id="submit-btn" disabled>✅ Submit</button>
+                        </form>
+                        <canvas id="image" width="320" height="240" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+            // 🎥 Access the user's camera
+            const video = document.getElementById('video');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+                })
+                .catch((err) => {
+                    console.error("Camera access denied:", err);
+                });
+
+            // 📸 Capture 3 photos one by one
+            const captureBtn = document.getElementById('capture-btn');
+            const canvas = document.getElementById('image');
+            const faceInputs = [document.getElementById('face1'), document.getElementById('face2'), document.getElementById('face3')];
+            const previews = [document.getElementById('preview-1'), document.getElementById('preview-2'), document.getElementById('preview-3')];
+
+            let photoCount = 0;
+
+            captureBtn.addEventListener('click', () => {
+                if (photoCount < 3) {
+                    const context = canvas.getContext('2d');
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageDataUrl = canvas.toDataURL('image/png');
+
+                    faceInputs[photoCount].value = imageDataUrl;
+                    previews[photoCount].src = imageDataUrl;
+                    previews[photoCount].style.display = 'block';
+
+                    photoCount++;
+
+                    if (photoCount === 3) {
+                        captureBtn.disabled = true;
+                        document.getElementById('submit-btn').disabled = false;
+                    }
+                }
+            });
+
+            // 📤 Handle image file uploads
+            document.querySelectorAll('.upload-input').forEach((input, index) => {
+                input.addEventListener('change', function () {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+
+                        reader.onload = function (e) {
+                            previews[index].src = e.target.result;
+                            previews[index].style.display = 'block';
+                            faceInputs[index].value = e.target.result;
+                        };
+
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            });
+
+
+        function bringNames() {
+            const selectedValue = document.getElementById("departId").value;
+            console.log(selectedValue,"gettings");
+            window.location.href = `?department=${selectedValue}`;
+        }
+    </script>
+    </body>
+
+
+</html>

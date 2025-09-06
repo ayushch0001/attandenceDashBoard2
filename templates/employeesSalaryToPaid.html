@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary List</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background: #f4f4f4;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: static;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .navbar {
+            background: linear-gradient(45deg, #000000, #080808);
+        }
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-size: 1.2rem;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ffd700 !important;
+        }
+        .container {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .present {
+            color: green;
+            font-weight: bold;
+        }
+        .absent {
+            color: red;
+            font-weight: bold;
+        }
+        .date-filter {
+            margin-left: 20px;
+        }
+        .date-filter input {
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .date-filter button {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #submitBtn {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+
+        .alert {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Salaries</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon text-white">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                
+        <li class="nav-item"><a class="nav-link" href="{% url 'success_page' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'salaryOfEmployees' %}">Add Salary</a></li>
+            <li class="nav-item"> 
+				<form id="exportForm" method="post" data-url="{% url 'paidToAllEmployee' %}" class="form-inline my-2 my-lg-0 date-filter">
+                    {% csrf_token %}
+                    <li class="nav-item mr-2"> 
+                        <select class="form-control" id="departId" name="departId">
+                            <option value="0">All</option>
+                            {% for depart in departments %}
+                            <option value="{{ depart.id }}">{{ depart.deprtment }}</option>
+                            {% endfor %}
+                        </select>
+                    </li>
+                    <li class="nav-item mr-2"> 
+                        <input type="month" name="month">
+                    </li>
+                    <li class="nav-item">
+                        
+                        <button type="submit" id="submitBtn" class="btn btn-warning">Find</button>
+                    </li>
+                    <p id="statusMsg" style="color: red; display: none;"></p>
+                </form>
+            </li>
+          
+        
+        
+        </ul>
+        </div>
+    </nav>
+
+
+    <div class="container">
+        <h2 class="text-center">Salary Records</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+				
+                    <tr>
+                        <th>Name</th>
+                        <th>Total Late Days </th>
+                        <th>Half Day Due to late</th>
+                        <th>Absent Due Tolate</th>
+                        <th>Total Early Outs</th>
+                        <th>Half Days due to Early Out</th>
+                        
+                        <th>Absents</th>
+                        <th>Total Unpaid Days</th>
+                        <th>Total Salary</th>
+                        <th>Allowed Leave</th>
+                        <th>Action</th>
+                    </tr>
+					
+                </thead>
+                <tbody>
+
+
+                        {% for employeeRec in allemployeesMonthData %}
+                    <form method="post" action="{% url 'paidToAllEmployee' %}">
+                        {% csrf_token %}
+                        <tr>
+                            <td>{{ employeeRec.employee.name }}</td>
+                            <td>{{ employeeRec.lateDays }}</td>
+                            <td>{{ employeeRec.halfDaysDuetolate }}</td>
+                            <td>{{ employeeRec.absentDueTolate }}</td>
+                            <td>{{ employeeRec.earlyOuts }}</td>
+                            <td>{{ employeeRec.halfDays }}</td>
+                
+                            <td>{{ employeeRec.absents }}</td>
+                            <td>{{ employeeRec.totalunpaidDays }}</td>
+                            <td>{{ employeeRec.totalsalary }}</td>
+
+
+                            <td>
+                                <input type="hidden" value = "{{ departId }}" name="departId">
+                                <input type="hidden" value = "{{ month_str }}" name="month">
+                                <input type="hidden" value="{{ employeeRec.employee.empId }}" name="empId" >
+                                <input type="number" name="leave"  placeholder="{{ employeeRec.allowedLeaveTakens }}" class="form-control">
+         
+                            </td>
+                            <td colspan="1">
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </td>
+                    </form>        
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center text-danger">No Employee Salary Records Found</td>
+                        </tr>
+                    
+                        {% endfor %}
+
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Face Attendance System. All rights reserved.</p>
+    </footer>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
+ 
