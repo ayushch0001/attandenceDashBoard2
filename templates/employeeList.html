@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance List</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background: #f4f4f4;
+        }
+
+        .footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            position: static;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .navbar {
+            background: linear-gradient(45deg, #000000, #080808);
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-size: 1.2rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #ffd700 !important;
+        }
+
+        .container {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .present {
+            color: green;
+            font-weight: bold;
+        }
+
+        .absent {
+            color: red;
+            font-weight: bold;
+        }
+
+        .date-filter {
+            margin-left: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .date-filter select,
+        .date-filter button {
+            margin-right: 10px;
+        }
+
+        #submitBtn {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .alert {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Attendance</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon text-white">☰</span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="{% url 'success_page' %}">Home</a></li>
+            </ul>
+
+            {% if user.is_authenticated %}
+            <!-- Moved form out of <ul> for valid HTML -->
+            <form id="exportForm" href="{% url 'employees' %}" class="date-filter ml-3" method="POST">
+                {% csrf_token %}
+                <select class="form-control" name="departId" id="departId">
+                    <option value="0">All</option>
+                    {% for depart in deparments %}
+                    <option value="{{ depart.id }}">{{ depart.deprtment }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" id="submitBtn">Submit</button>
+                <p id="statusMsg" style="color: red; display: none; margin-bottom: 0; margin-left: 10px;"></p>
+            </form>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Optional warning (currently hidden) -->
+    <div class="container">
+        <div id="date-alert" class="alert alert-danger text-center">
+            ⚠️ Please select a date and department before searching or exporting.
+        </div>
+    </div>
+
+    <!-- Attendance Table -->
+    <div class="container">
+        <h2 class="text-center">Attendance Records</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Mark Leave</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if employees %}
+                    {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.name }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm mark-leave-btn" data-emp-id="{{ emp.id }}">Mark
+                                Leave</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center">No employee records found.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Face Attendance System. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const buttons = document.querySelectorAll(".mark-leave-btn");
+
+            buttons.forEach(button => {
+                button.addEventListener("click", async () => {
+                    const empId = button.getAttribute("data-emp-id");
+                    console.log(empId)
+                    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;;
+
+                    button.disabled = true;
+                    button.textContent = "Marking...";
+
+                    try {
+                        const response = await fetch("{% url 'leavepage' %}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken
+                            },
+                            body: JSON.stringify({ empId: empId })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert("✅ Leave marked successfully!");
+                        } else {
+                            throw new Error(result.message || "Something went wrong.");
+                        }
+                    } catch (error) {
+                        alert("❌ " + error.message);
+                        console.error("Leave error:", error);
+                    } finally {
+                        button.disabled = false;
+                        button.textContent = "Mark Leave";
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
