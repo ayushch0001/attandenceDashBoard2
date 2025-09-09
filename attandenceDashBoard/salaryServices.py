@@ -197,8 +197,8 @@ class SalaryServices:
             return {}
 
         
-        unpaid_absences = ( record.absentDueTolate  + record.absents ) - record.allowedLeaveTakens
-        
+        # unpaid_absences = ( record.absentDueTolate  + record.absents ) - record.allowedLeaveTakens
+        unpaid_absences =  record.absents  - record.allowedLeaveTakens
         unpaid_half_days = record.halfDaysDuetolate + record.halfDays
         
         total_unpaid_days = unpaid_absences + (unpaid_half_days / 2.0) 
