@@ -203,7 +203,7 @@ class SalaryServices:
         unpaid_half_days =  record.halfDays
 
         
-        total_unpaid_days = unpaid_absences + (unpaid_half_days / 2.0) 
+        total_unpaid_days = unpaid_absences + (unpaid_half_days) 
         record.totalunpaidDays = total_unpaid_days
         
         rate_per_day = monthly_salary / total_working_days
@@ -294,3 +294,5 @@ class AdminSalaryServices:
                 )
             AttandenceService().record(month_str,employee)
             SalaryServices().makeSalary(employee,month_str)
+
+            

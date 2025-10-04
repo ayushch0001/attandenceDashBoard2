@@ -130,11 +130,11 @@
 				
                     <tr>
                         <th>Name</th>
-                        <th>Total Late Days </th>
-                        <th>Half Day Due to late</th>
-                        <th>Absent Due Tolate</th>
+                        <!-- <th>Total Late Days </th> -->
+                        <!-- <th>Half Day Due to late</th>
+                        <th>Absent Due Tolate</th> -->
                         <th>Total Early Outs</th>
-                        <th>Half Days due to Early Out</th>
+                        <th>Absent due to late and early out</th>
                         
                         <th>Absents</th>
                         <th>Total Unpaid Days</th>
@@ -152,9 +152,9 @@
                         {% csrf_token %}
                         <tr>
                             <td>{{ employeeRec.employee.name }}</td>
-                            <td>{{ employeeRec.lateDays }}</td>
-                            <td>{{ employeeRec.halfDaysDuetolate }}</td>
-                            <td>{{ employeeRec.absentDueTolate }}</td>
+                            <!-- <td>{{ employeeRec.lateDays }}</td> -->
+                            <!-- <td>{{ employeeRec.halfDaysDuetolate }}</td>
+                            <td>{{ employeeRec.absentDueTolate }}</td> -->
                             <td>{{ employeeRec.earlyOuts }}</td>
                             <td>{{ employeeRec.halfDays }}</td>
                 
