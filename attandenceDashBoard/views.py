@@ -998,3 +998,46 @@ def markAllowedLeave(request):
         else :
             return JsonResponse({"success": False, "message": "Leave marked Unsucessful."})
     return JsonResponse({"success": False, "message": "Leave marked unsuccessfully."})
+
+
+
+@csrf_exempt
+def deleteEmployee(request):
+    if request.method == 'DELETE':
+        try:
+            # Django's request.DELETE doesn't handle JSON automatically.
+            # We must load the body manually.
+            data = json.loads(request.body)
+            empId = data.get('empId')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid JSON data provided."
+            })
+
+        if not empId:
+            return JsonResponse({
+                "success": False,
+                "message": "Employee ID is required."
+            })
+
+        # Perform the delete operation
+        deleted_count, _ = EmployeeRegistration.objects.filter(
+            empId=empId
+        ).delete()
+
+        if deleted_count > 0:
+            return JsonResponse({
+                "success": True,
+                "message": "Employee deleted successfully."
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "message": "Employee not found."
+            })
+
+    return JsonResponse({
+        "success": False,
+        "message": "Invalid request method. Only DELETE is allowed."
+    })

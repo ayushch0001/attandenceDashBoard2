@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from .views import register,logout_view, login_view,createSuperUser,register_faces,getData,lateDataView ,success,markAttandence,attendance_list ,export_attendance_to_excel,gethistorydata,export_month_attendance_to_excel,leaveManagement,employee_list,failedAttem_list,getSalaryOfEmployee
+from .views import register,logout_view, login_view,createSuperUser,register_faces,getData,lateDataView ,success,markAttandence,attendance_list ,export_attendance_to_excel,gethistorydata,export_month_attendance_to_excel,leaveManagement,employee_list,failedAttem_list,getSalaryOfEmployee,deleteEmployee
 from attandenceDashBoard.adminViewPageNew import AdminViewPage
 
 urlpatterns = [
@@ -46,7 +46,9 @@ urlpatterns = [
     
     # for admin to manage salary
     path('salaryOfEmployees/',AdminViewPage.getEmployeeListSalaryObject,name='salaryOfEmployees'),
-    path('paidToAllEmployee/',AdminViewPage.getSaleryOfEmployeeToPaid,name='paidToAllEmployee')
+    path('paidToAllEmployee/',AdminViewPage.getSaleryOfEmployeeToPaid,name='paidToAllEmployee'),
+
+    path('deleteEmployee/',deleteEmployee,name='deleteEmployee')
 
 
 

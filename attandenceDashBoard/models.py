@@ -27,8 +27,21 @@ class Department(models.Model):
     def __str__(self):
         return self.deprtment
 
+
+
 class EmployeeRegistration(models.Model):
+    SHIFT_CHOICES = [
+        ('DAY', 'Day'),
+        ('NIGHT', 'Night'),
+    ]
     deprt = models.ForeignKey(Department,on_delete=models.PROTECT,default = None,null=True)
+    shift = models.CharField(
+        max_length=5,
+        choices=SHIFT_CHOICES,
+        default="Day",
+        null=True,
+        blank=True
+    )
     name = models.CharField(max_length=100,blank=False,null=False)
     empId = models.CharField(unique=True,max_length=10,blank=False,null=False)
     img = models.ImageField(upload_to='employee_images/', blank=True, null=False)
