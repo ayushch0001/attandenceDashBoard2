@@ -34,6 +34,10 @@ class EmployeeRegistration(models.Model):
         ('DAY', 'Day'),
         ('NIGHT', 'Night'),
     ]
+    EMPLOYEE_CHOICES = [
+        ('MONTHLY', 'Monthly'),
+        ('WEEKLY', 'Weekly'),
+    ]
     deprt = models.ForeignKey(Department,on_delete=models.PROTECT,default = None,null=True)
     shift = models.CharField(
         max_length=5,
@@ -59,6 +63,11 @@ class EmployeeRegistration(models.Model):
     cState = models.CharField(max_length=100,blank=False,null=False)
     oEmployerName =  models.CharField(max_length=100,blank=False,null=False)
     oEmpMob =  models.IntegerField(max_length=10,blank=False,null=False)
+    employeetype = models.CharField( max_length=7,
+        choices=EMPLOYEE_CHOICES,
+        default="Monthly",
+        null=True,
+        blank=True)
 
     
     def __str__(self):
@@ -97,6 +106,11 @@ class LeaveManagement(models.Model):
     def __str__(self):
         return f"{self.emp.name } - {self.date}"
     
+class MonthlyHolidays(models.Model):
+    holidayPerMonth = models.IntegerField(default=0)
+    monthName = models.DateField(default=datetime.date(datetime.date.today().year,datetime.date.today().month,1))
+    def __str__(self) -> str:
+        return f" {self.monthName.month} - {self.monthName.year}"
 
 class SalaryOfEveryPerson(models.Model):
     emp = models.ForeignKey(EmployeeRegistration,on_delete=models.CASCADE,default=None,unique=True)
@@ -118,4 +132,4 @@ class employeeRecordEveryMonth(models.Model):
     totalunpaidDays = models.FloatField(default=0.0)
     totalsalary = models.FloatField(default=0.0)
     def __str__(self) -> str:
-        return f"{self.employee} - {self.monthDate.month} - id {self.pk}"
+        return f"{self.employee} - {self.monthDate.month} - id {self.employee.empId}"

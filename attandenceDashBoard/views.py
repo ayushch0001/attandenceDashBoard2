@@ -1,4 +1,5 @@
 from datetime import date, datetime ,time ,timedelta
+from django.utils import timezone
 from PIL import Image 
 from django.shortcuts import render, redirect
 import os
@@ -51,8 +52,7 @@ def register(request):
                 employee.save()
                 return redirect('success_page')
             else:
-                # Form is invalid, check errors
-                print(form.errors)
+
                 return render(request, 'EmployeeSection/employeeRegistration.html', {
                     'departments': departments,
                     'form': form
@@ -130,14 +130,13 @@ def markAttandence(request):
  
     if request.method == 'POST':
         clickedImg = request.POST.get('clickedImg')
-        # print(clickedImg)
+       
         actionType = request.POST.get('actionType')  # Get Sign In or Sign Out action
         empId = request.POST.get('empId')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
         address = request.POST.get('address')
-        print(latitude , longitude , "lat lon")
-        print(address)
+     
         encoded_image_data = clickedImg.split(',')[1] 
         decoded_image_data = base64.b64decode(encoded_image_data)
         image = Image.open(BytesIO(decoded_image_data))
@@ -148,8 +147,6 @@ def markAttandence(request):
         try :
 
             name = EmployeeRegistration.objects.filter(empId=empId).first().name
-            print(name)
-            
             
             if name:
                     names = []
@@ -158,24 +155,22 @@ def markAttandence(request):
                     attendances = get_employee_attendance_current_month(empId)
                     
                     latecount= countOfLateDays(attendances)
-                    print(latecount,"late days")
+                   
                     eighthourcount = calculateHours(attendances)
 
                     emp = EmployeeRegistration.objects.get(empId= empId)
                     depart = emp.deprt
             
+                    
+
 
                     if actionType == 'signin':
-                        # Record Sign In time (only if not already marked today)
-                        # obj = Attandence.objects.create(emp=emp,singInTime = datetime.now().time(),mark=True)
-                        
-                        
 
                         current_time = datetime.now().time()
                         today = datetime.today().date()
                         
                         obj = Attandence.objects.filter(emp=emp, date=today).filter( singInTime__isnull=True).first()
-                        # if obj and latecount <2 or current_time < target_time :
+                       
                         if obj :
 
                             
@@ -187,9 +182,9 @@ def markAttandence(request):
                             names.append(f"{name} - Signed In")
 
                         elif Attandence.objects.filter(emp=emp, date=today).filter( singInTime__isnull=False).exists()   :
-                            print("here tak ara hai ",name)
+                            
                             names.append(f"{name} - Allredy signed In")
-                        # elif latecount <2 or current_time < target_time:
+                      
                         else :
                             
                             Attandence.objects.create(
@@ -206,7 +201,13 @@ def markAttandence(request):
                         #     names.append(f"{name} -You are late ")
                 
                     elif actionType == 'signout':
-                        # Update the same day's record to mark Sign Out
+                        if emp.shift == "NIGHT":
+                            yesterday = timezone.now().date() - timedelta(days=1)
+
+                            obj = Attandence.objects.filter(emp=emp, date=yesterday).first()
+                        else : 
+                            obj = Attandence.objects.filter(emp=emp, date=datetime.today().date()).first()    
+
                         
                         current_time = datetime.now().time()
                         obj = Attandence.objects.filter(emp=emp, date=datetime.today().date()).first()
@@ -218,18 +219,17 @@ def markAttandence(request):
                         remianing = eight_hours -  todayshours
 
                         if obj :
-                            # if (eighthourcount <2 and not obj.singoutTime) or todayshours >= eight_hours :
+                          
                             if not obj.singoutTime :
-                                obj.singoutTime = datetime.now().time()  # Update time field
+                                obj.singoutTime = datetime.now().time()
                                 obj.save()
                                 names.append(f"{name} - Signed Out")
-                            # elif (eighthourcount <2 ) or todayshours >= eight_hours : 
+                          
                             else :
-                                obj.singoutTime = datetime.now().time()  # Update time field
+                                obj.singoutTime = datetime.now().time()  
                                 obj.save()
                                 names.append(f"{name} - Signed Out")
-                            # else : 
-                            #     names.append(f"{name} 8 hours is not completed remaining {remianing}")
+                           
                         else:
                             names.append(f"{name} - No Sign In record found")
 
@@ -279,7 +279,7 @@ def markAttandence(request):
 
 def attendance_list(request):
     if request.method == "POST":
-        print("comming")
+        
         selected_date = request.POST.get('date')
         departId = request.POST.get('departId') 
         
@@ -329,7 +329,7 @@ def export_attendance_to_excel(request):
         if not selected_date:
             return JsonResponse({'error': 'Please select a date before exporting.'}, status=400)
 
-        print(f"Exporting attendance for: {selected_date}")
+      
 
         # Create attendance if not already marked
         createAttandenceOfAllEmployeeOfDate(selected_date)
@@ -558,12 +558,12 @@ def getdays(date):
 def export_month_attendance_to_excel(request):
     try:
         data = json.loads(request.body.decode("utf-8"))  # Decode JSON body
-        print("Received Data:", data)  # Debugging line
+        # Debugging line
 
         month_str = data.get('month')  
     
         departId = data.get('departId')  
-        print(departId,"id")
+        
          # Debugging line
 
         if not month_str:
@@ -576,7 +576,7 @@ def export_month_attendance_to_excel(request):
         year, month = today.year, today.month
         last_day = calendar.monthrange(year, month)[1]
 
-        print(month_str," months")
+        
 
         # Get all attendance records for the selected month
         
@@ -866,7 +866,7 @@ def leaveManagement(request):
         today = now().date()
 
         LeaveManagement.objects.create(emp=emp, date=today)
-        print(emp.name)
+    
         return JsonResponse({"success": True, "message": "Leave marked successfully."})
 
     except EmployeeRegistration.DoesNotExist:
@@ -884,11 +884,11 @@ def employee_list(request):
         try:
             
             depart_id = request.POST.get("departId")
-            print("data comming",depart_id)
+        
             if depart_id and depart_id != "0":
-                print("data comming")
+           
                 employees = EmployeeRegistration.objects.filter(deprt=depart_id)
-                print(employees)
+           
             else:
                 employees = EmployeeRegistration.objects.all()
 
@@ -916,7 +916,7 @@ def employee_list(request):
 
 def failedAttem_list(request):
     if request.method == "POST":
-        print("comming")
+        
         selected_date = request.POST.get('date')
         departId = request.POST.get('departId') 
         
@@ -970,7 +970,7 @@ def getSalaryOfEmployee(request):
         salaryService = SalaryServices()
         dict1  = salaryService.makeSalary(employee,month)
         record = attService.record(month,employee)
-        if dict1 == None and salary == 0.0 :
+        if dict1 == None:
             return render(request, 'salaryDashBoard.html', {
                 'message': 'no record ',           
             })

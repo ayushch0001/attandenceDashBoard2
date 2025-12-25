@@ -1,8 +1,9 @@
-from datetime import date, datetime, time
-from .models import Attandence, EmployeeRegistration
+from datetime import date, datetime, time ,timedelta
 import calendar
 from django.utils.timezone import now
-from datetime import datetime, timedelta
+from calendar import monthrange
+from .models import Attandence, EmployeeRegistration
+
 
 def get_employee_attendance_current_month(employee_id):
     """
@@ -67,9 +68,6 @@ def createAttandenceOfAllEmployeeOfDate(date=None):
         print(f"Unexpected error: {str(e)}")
 
 
-from datetime import datetime, timedelta
-from calendar import monthrange
-from .models import Attandence, EmployeeRegistration
 
 def create_all_months_absent_objects_till_today(emp_id):
     """
@@ -142,8 +140,8 @@ def create_all_months_absent_objects_till_today_of_All():
         today = datetime.today()
         current_year = today.year
         current_month = today.month
-        last_day = calendar.monthrange(current_year, current_month)[1]  # Get last day of the month
-
+        # last_day = calendar.monthrange(current_year, current_month)[1]  # Get last day of the month
+        last_day = today.date
         employees = EmployeeRegistration.objects.all()
 
         for employee in employees:

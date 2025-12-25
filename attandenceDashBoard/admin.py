@@ -3,7 +3,7 @@ from django.contrib import admin
 # Register your models here.
 from django.contrib.auth.admin import UserAdmin
 
-from attandenceDashBoard.models import Attandence, CustomUserFace, StoreFaces, EmployeeRegistration ,Department,employeeRecordEveryMonth,SalaryOfEveryPerson,LeaveManagement,Failedattandence
+from attandenceDashBoard.models import Attandence, CustomUserFace, StoreFaces, EmployeeRegistration ,Department,employeeRecordEveryMonth,SalaryOfEveryPerson,LeaveManagement,Failedattandence,MonthlyHolidays
 
 @admin.register(CustomUserFace)
 class CustomUserAdmin(UserAdmin):
@@ -20,3 +20,4 @@ admin.site.register(employeeRecordEveryMonth)
 admin.site.register(SalaryOfEveryPerson)
 admin.site.register(LeaveManagement)
 admin.site.register(Failedattandence)
+admin.site.register(MonthlyHolidays)

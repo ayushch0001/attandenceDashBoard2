@@ -4,10 +4,7 @@ from datetime import date, datetime, time, timedelta
 from attandenceDashBoard.service import create_all_months_absent_objects_till_today_of_All
 
 
-from .models import LeaveManagement, SalaryOfEveryPerson , EmployeeRegistration , Attandence ,employeeRecordEveryMonth ,Department
-
-
-
+from .models import LeaveManagement, MonthlyHolidays, SalaryOfEveryPerson , EmployeeRegistration , Attandence ,employeeRecordEveryMonth ,Department
 
 
 
@@ -66,7 +63,10 @@ class AttandenceService:
                 duration = ""
                 signInTime = datetime.combine(date.today(), dayattendence.singInTime)
                 signInOut = datetime.combine(date.today(), dayattendence.singoutTime)
-                working_hours = signInOut - signInTime 
+                if employee.shift == "NIGHT":
+                     working_hours =  signInTime - signInOut
+                else :        
+                    working_hours = signInOut - signInTime 
                 duration = timedelta(hours=department.workingHour) - timedelta(minutes=department.earlyRelifeHour)
 
                 
@@ -82,7 +82,8 @@ class AttandenceService:
             if not dayattendence.singInTime and not dayattendence.singoutTime :
                 absents = absents + 1
                  
-
+        
+       
         record, created = employeeRecordEveryMonth.objects.get_or_create(
         employee=employee,
         monthDate=today
@@ -91,10 +92,13 @@ class AttandenceService:
         month_cal = calendar.monthcalendar(year, monthNum)
         num_sundays = sum(1 for week in month_cal if week[calendar.SUNDAY] != 0)
 
-
-        if created:
-
-            record.absents = absents + objectNotcreated - num_sundays
+        
+        if created: 
+            if  employee.employeetype == "WEEKLY":
+               
+                record.absents = absents + objectNotcreated 
+            else :
+                 record.absents = absents + objectNotcreated - num_sundays
             record.earlyOuts = len(earlyOut_list)
             record.lateDays = len(lateDays_list)
 
@@ -143,7 +147,44 @@ class AttandenceService:
             record.save()
         return record
     
+
+    def getTrioDaysAbsent(self, employee_id, month_str):
+        month_date = datetime.strptime(month_str, "%Y-%m")
+        year = month_date.year
+        month = month_date.month
+
+        employee = EmployeeRegistration.objects.filter(empId=employee_id).first()
+        if not employee:
+            return 0
+
+        # Get absent dates
+        absent_dates = list(
+            Attandence.objects.filter(
+                emp=employee,
+                mark=False,
+                date__year=year,
+                date__month=month
+            )
+            .order_by("date")
+            .values_list("date", flat=True)
+        )
+        absent_dates.sort()
+        total_trio_days = 0
+
+        
+
+        for i in range(len(absent_dates) - 2):
+            d1 = absent_dates[i]
+            d2 = absent_dates[i + 2]
     
+            # Saturday = 5, Monday = 0
+            if d1.weekday() == 5 and d2.weekday() == 0:
+                # Ensure exactly Sunday gap
+                if (d2 - d1).days == 2:
+                    total_trio_days += 1
+
+        return total_trio_days
+           
 
     def leaveTaken(self,month_str,empId,number):
 
@@ -160,6 +201,7 @@ class AttandenceService:
              record.allowedLeaveTakens = number
         record.save()
 
+    
 
 class SalaryServices:
     
@@ -180,14 +222,11 @@ class SalaryServices:
             record.refresh_from_db()
         except (SalaryOfEveryPerson.DoesNotExist, employeeRecordEveryMonth.DoesNotExist):
             print(f"Missing salary or attendance record for {employee} for {month_str}.")
-            return {}  # Or handle as per your business logic
+            return {} 
 
         # --- 2. Determine Working Days and Unpaid Days ---
         _, num_days_in_month = calendar.monthrange(year, month)
-
-        # Assuming Sundays are non-working days. You can also subtract Saturdays or public holidays.
-
-        # check here sundays are working or not -----------------------------------------------------
+        # -----------------------------------------------------
         totaly_attandence = attService.get_employee_attendance_current_month(employee.empId,month_str)
 
         
@@ -195,11 +234,19 @@ class SalaryServices:
        
         if total_working_days == 0:
             return {}
-
         
-        # unpaid_absences = ( record.absentDueTolate  + record.absents ) - record.allowedLeaveTakens
-        unpaid_absences =  record.absents  - record.allowedLeaveTakens
-        # unpaid_half_days = record.halfDaysDuetolate + record.halfDays
+        #    her I am adding the trio absent like (saturday and monday absent than 3 days it wil be)
+
+        monthlyHoliday = MonthlyHolidays.objects.filter(monthName = today).first()
+       
+
+        if  employee.employeetype == "WEEKLY": 
+            trioDaysAbsent = 0
+        else :    
+            trioDaysAbsent = attService.getTrioDaysAbsent(employee.empId,month_str)
+
+        unpaid_absences =  record.absents + trioDaysAbsent - record.allowedLeaveTakens - monthlyHoliday.holidayPerMonth
+    
         unpaid_half_days =  record.halfDays
 
         
@@ -294,5 +341,7 @@ class AdminSalaryServices:
                 )
             AttandenceService().record(month_str,employee)
             SalaryServices().makeSalary(employee,month_str)
-
+           
+            
+           
             
