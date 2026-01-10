@@ -96,7 +96,7 @@ class AttandenceService:
         if created: 
             if  employee.employeetype == "WEEKLY":
                
-                record.absents = absents + objectNotcreated + num_sundays
+                record.absents = absents + objectNotcreated 
             else :
                  record.absents = absents + objectNotcreated - num_sundays
             record.earlyOuts = len(earlyOut_list)
